@@ -5,6 +5,9 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
+    # resource server
+    url(r'^resource/', include('resource_server.urls')),
+
     # Examples:
     url(r'^$', 'dataware.views.home', name='home'),
     # url(r'^dataware/', include('dataware.foo.urls')),
