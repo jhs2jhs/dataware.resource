@@ -1,3 +1,9 @@
+# add dataware shared libs in
+import os
+import sys
+PROJECT_ROOT=os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(PROJECT_ROOT, '../../../../dataware.slibs/'))
+
 # Django settings for dataware project.
 
 DEBUG = True
