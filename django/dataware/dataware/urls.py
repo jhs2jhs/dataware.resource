@@ -7,6 +7,8 @@ admin.autodiscover()
 urlpatterns = patterns('',
     # resource server
     url(r'^resource/', include('resource_server.urls')),
+    url(r'^accounts/login', 'django.contrib.auth.views.login'),
+    url(r'^accounts/logout', 'django.contrib.auth.views.logout'),
 
     # Examples:
     url(r'^$', 'dataware.views.home', name='home'),
