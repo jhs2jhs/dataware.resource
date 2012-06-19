@@ -3,12 +3,40 @@ from django.shortcuts import render_to_response
 from django.contrib.auth.decorators import login_required
 from django.template import Template, RequestContext
 from django.contrib.auth.models import User
+from django.contrib.auth import login, authenticate, logout
 from dwlib import request_get, url_keys, form_label
 import dwlib
-from libauth.models import CatalogResourceRegistration as CRR
+from libauth.models import Registration as CRR
+from libauth.models import Registration
+from libauth.models import regist_steps, regist_dealer, REGIST_STATUS, REGIST_TYPE
+from libauth.models import find_key_by_value_regist_type, find_key_by_value_regist_status
 
 def hello(request):
     return HttpResponse('hello, resource')
+
+
+regist_callback_me = 'http://localhost:8001/resource/regist'
+
+class regist_dealer_resource(regist_dealer):
+    def regist_init(self): pass
+    def registrant_request(self): 
+        return HttpResponseRedirect('http://localhost:8001/resource/regist?REGIST_STATUS=REGISTER_OWNER_REDIRECT')
+    #@login_required
+    def register_owner_redirect(self): 
+        print self.user
+        return HttpResponse('hello, redirect')
+    def register_owner_grant(self): pass
+    def register_grant(self): pass
+    def registrant_owner_redirect(self): pass
+    def registrant_owner_grant(self): pass
+    def registrant_confirm(self): pass
+    def register_activate(self): pass
+    def regist_finish(self): pass
+    
+def regist(request):
+    # if no correct status is matched
+    return regist_steps(regist_dealer_resource(request), request)
+
 
 #####registeration with catalog#####
 def catalog_register(request):
