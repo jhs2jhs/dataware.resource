@@ -141,6 +141,7 @@ class regist_dealer_resource(regist_dealer):
         context = RequestContext(self.request, c)
         return render_to_response("regist_owner_grant.html", context)
     def register_grant(self): 
+        print self.request.REQUEST
         user = self.request.user
         register_redirect_token = request_get(self.request.REQUEST, url_keys.register_redirect_token)
         regist_type = request_get(self.request.REQUEST, url_keys.regist_type)
@@ -158,7 +159,32 @@ class regist_dealer_resource(regist_dealer):
             next_url_params = dwlib.urlencode(params)
             return HttpResponseRedirect('/accounts/login?%s'%next_url_params)
         # now, we have correct user here. We may need to check whether this token has been used before or not.
+        print register_redirect_token
         try:
+            if request_get(self.request.REQUEST, url_keys.register_request_action) == url_keys.register_request_action_request:
+                print "hello"
+                register_request_token = request_get(self.request.REQUEST, url_keys.register_request_token)
+                registration = Registration.objects.get(register_request_token=register_request_token)
+                if registration.user != user :
+                    return error_response(2, ("user"))
+                register_request_token = request_get(self.request.REQUEST, url_keys.register_request_token)
+                if registration.register_request_token != register_request_token:
+                    return error_response(2, (url_keys.register_request_token))
+                register_request_scope = request_get(self.request.REQUEST, url_keys.register_request_scope)
+                registration.register_request_scope = register_request_scope
+                registration.save()
+                params = {
+                    url_keys.regist_status: REGIST_STATUS.registrant_owner_redirect,
+                    url_keys.regist_type: regist_type,
+                    url_keys.regist_callback: regist_callback_me,
+                    url_keys.register_access_token: registration.register_access_token,
+                    url_keys.register_access_validate: registration.register_access_validate,
+                    url_keys.register_request_token: registration.register_request_token,
+                    url_keys.register_request_scope: registration.register_request_scope,
+                    }
+                url_params = dwlib.urlencode(params)
+                url = '%s?%s'%(registration.registrant_callback, url_params)
+                return HttpResponseRedirect(url)
             registration = Registration.objects.get(register_redirect_token=register_redirect_token)
             regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_owner_grant)
             #if registration.regist_status != regist_status_key:
@@ -178,7 +204,7 @@ class regist_dealer_resource(regist_dealer):
         registration.register_request_scope = register_request_scope
         registration.save()
         params = {
-            url_keys.regist_status: REGIST_STATUS.registrant_confirm, # for mutual registraiton it is different
+            url_keys.regist_status: REGIST_STATUS.registrant_confirm, # for mutual registraiton it is different, user need to decide here, TODO
             url_keys.regist_type: regist_type,
             url_keys.regist_callback: regist_callback_me,
             url_keys.register_access_token: register_access_token,
@@ -212,7 +238,7 @@ class regist_dealer_resource(regist_dealer):
                 },
             'regist_status':{
                 'label': url_keys.regist_status,
-                'value': REGIST_STATUS.register_owner_grant,
+                'value': REGIST_STATUS.register_grant,
                 },
             'regist_type':{ # need to add into template files
                 'label': url_keys.regist_type,
