@@ -1,0 +1,36 @@
+{% extends "./base.html" %}
+
+{% block content %}
+
+<form method="post" action="regist">
+<input type="hidden" name="{{ register_redirect_token.label }}" value="{{ register_redirect_token.value }}" />
+<input type="hidden" name="{{ regist_status.label }}" value="{{ regist_status.value }}" />
+<input type="hidden" name="{{ regist_type.label }}" value="{{ regist_type.value }}" />
+{% csrf_token %}
+Do you want to grant this permission?<br><br>
+<div>
+<table>
+Request:
+</tr>
+<tr> <td>URL: {{ regist_callback }} </td> </tr>
+<tr> <td>Request_Token: {{ regist_request_token }} </td> </tr>
+<tr> <td>Request_Scope: {{ regist_request_scope }} </td> </tr>
+<tr> <td>Request_Reminder: {{ regist_request_reminder }} </td> </tr>
+</table>
+</div>
+
+<br><br>
+
+<div>
+<table>
+Action:
+<tr> <td> <input type="submit" name="{{ regist_redirect_action.label }}" value="{{ regist_redirect_action.grant }}" /> </td></tr>
+<tr> <td>  <input type="submit" name="{{ regist_redirect_action.label }}" value="{{ regist_redirect_action.modify_scope }}" /> </td></tr>
+<tr> <td> <input type="submit" name="{{ regist_redirect_action.label }}" value="{{ regist_redirect_action.wrong_user }}" /> </td></tr>
+</table>
+</div>
+
+</form>
+
+{% endblock %}
+
