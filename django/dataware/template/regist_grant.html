@@ -1,0 +1,34 @@
+{% extends "./base.html" %}
+
+{% block content %}
+
+<form method="post" action="regist">
+<input type="hidden" name="{{ register_request_token.label }}" value="{{ register_request_token.value }}" />
+<input type="hidden" name="{{ regist_status.label }}" value="{{ regist_status.value }}" />
+<input type="hidden" name="{{ regist_type.label }}" value="{{ regist_type.value }}" />
+{% csrf_token %}
+<div>
+<table>
+You granted this permission and wait for confirmation from requester:
+</tr>
+<tr> <td>Access_token: {{ register_access_token.value }} </td> </tr>
+<tr> <td>Access_Validation: {{ register_access_validate.value }} </td> </tr>
+<tr> <td>Grant_User: {{ user.username }} </td> </tr>
+<tr> <td><textarea rows="10" cols="50"><a href="{{ regist_grant_url }}"> {{ regist_grant_url }} </a></textarea> </td> </tr>
+</table>
+</div>
+
+<br><br>
+
+<div>
+<table>
+Do you want to request for mutual registration? Please define your request scope:
+<tr> <td> <input type="text" name="{{ register_request_scope.label }}" value="{{ regist_request_scope.value }}" /> </td></tr>
+<tr> <td>  <input type="submit" name="{{ register_request_action.label }}" value="{{ register_request_action.request }}" /> </td></tr>
+</table>
+</div>
+
+</form>
+
+{% endblock %}
+

@@ -4,11 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.template import Template, RequestContext
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate, logout
-from dwlib import request_get, url_keys, form_label
+from django.core.exceptions import ObjectDoesNotExist
+from dwlib import request_get, url_keys, form_label, error_response
 import dwlib
 from libauth.models import Registration as CRR
 from libauth.models import Registration
-from libauth.models import regist_steps, regist_dealer, REGIST_STATUS, REGIST_TYPE
+from libauth.models import regist_steps, regist_dealer, REGIST_STATUS, REGIST_TYPE, TOKEN_TYPE
 from libauth.models import find_key_by_value_regist_type, find_key_by_value_regist_status, find_key_by_value_regist_request_media
 
 def hello(request):
@@ -43,7 +44,7 @@ class regist_dealer_resource(regist_dealer):
         registrant_request_reminder = request_get(self.request.REQUEST, url_keys.registrant_request_reminder)
         registrant_request_media = request_get(self.request.REQUEST, url_keys.registrant_request_media)
         registrant_request_user_public = request_get(self.request.REQUEST, url_keys.registrant_request_user_public)
-        register_redirect_token = dwlib.token_create(registrant_callback)
+        register_redirect_token = dwlib.token_create(registrant_callback, TOKEN_TYPE.redirect)
         params = {
             url_keys.regist_status: REGIST_STATUS.register_owner_grant,
             url_keys.regist_type: regist_type,
@@ -110,10 +111,8 @@ class regist_dealer_resource(regist_dealer):
             next_url_params = dwlib.urlencode(params)
             return HttpResponseRedirect('/accounts/login?%s'%next_url_params)
         registration = Registration.objects.get(register_redirect_token=register_redirect_token)
-        #print registration.regist_status
         regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_owner_grant)
         registration.regist_status = regist_status_key
-        #print registration.regist_status
         registration.save()
         c = {
             "regist_callback":registration.registrant_callback,
@@ -145,8 +144,83 @@ class regist_dealer_resource(regist_dealer):
         user = self.request.user
         register_redirect_token = request_get(self.request.REQUEST, url_keys.register_redirect_token)
         regist_type = request_get(self.request.REQUEST, url_keys.regist_type)
-        print regist_type
-        return HttpResponse("hello my grant")
+        if not user.is_authenticated():
+            params = {
+                url_keys.regist_status: REGIST_STATUS.register_owner_grant,
+                url_keys.regist_type: regist_type,
+                url_keys.register_redirect_token:register_redirect_token,
+                }
+            url_params = dwlib.urlencode(params)
+            url = '%s?%s'%(regist_callback_me, url_params)
+            next_params = {
+                "next":url
+                }
+            next_url_params = dwlib.urlencode(params)
+            return HttpResponseRedirect('/accounts/login?%s'%next_url_params)
+        # now, we have correct user here. We may need to check whether this token has been used before or not.
+        try:
+            registration = Registration.objects.get(register_redirect_token=register_redirect_token)
+            regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_owner_grant)
+            #if registration.regist_status != regist_status_key:
+            #    return error_response(4, (url_keys.register_redirect_token, register_redirect_token))
+        except ObjectDoesNotExist:
+            return error_response(3, (url_keys.register_redirect_token, register_redirect_token))
+        regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_grant)
+        registration.regist_status = regist_status_key
+        registration.user = user
+        register_access_token = dwlib.token_create_user(registration.registrant_callback, TOKEN_TYPE.access, user.id)
+        register_access_validate = registration.registrant_request_scope #TODO need to expand here
+        register_request_token = dwlib.token_create_user(registration.registrant_callback, TOKEN_TYPE.request, user.id)
+        register_request_scope = ''
+        registration.register_access_token = register_access_token
+        registration.register_access_validate = register_access_validate
+        registration.register_request_token = register_request_token
+        registration.register_request_scope = register_request_scope
+        registration.save()
+        params = {
+            url_keys.regist_status: REGIST_STATUS.registrant_confirm, # for mutual registraiton it is different
+            url_keys.regist_type: regist_type,
+            url_keys.regist_callback: regist_callback_me,
+            url_keys.register_access_token: register_access_token,
+            url_keys.register_access_validate: register_access_validate,
+            url_keys.register_request_token: register_request_token,
+            url_keys.register_request_scope: register_request_scope,
+            }
+        url_params = dwlib.urlencode(params)
+        url = '%s?%s'%(registration.registrant_callback, url_params)
+        c = {
+            'regist_grant_url': url,
+            'register_request_action':{
+                'label': url_keys.register_request_action,
+                'request': url_keys.register_request_action_request,
+                },
+            'register_request_scope': {
+                'label': url_keys.register_request_scope,
+                'value': register_request_scope,
+                },
+            'register_request_token': {
+                'label': url_keys.register_request_token,
+                'value': register_request_token,
+                },
+            'register_access_token': {
+                'label': url_keys.register_access_token,
+                'value': register_access_token,
+                },
+            'register_access_validate': {
+                'label': url_keys.register_access_validate,
+                'value': register_access_validate,
+                },
+            'regist_status':{
+                'label': url_keys.regist_status,
+                'value': REGIST_STATUS.register_owner_grant,
+                },
+            'regist_type':{ # need to add into template files
+                'label': url_keys.regist_type,
+                'value':regist_type,
+                },
+            }
+        context = RequestContext(self.request, c)
+        return render_to_response("regist_grant.html", context)
     def registrant_owner_redirect(self): pass
     def registrant_owner_grant(self): pass
     def registrant_confirm(self): pass
