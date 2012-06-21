@@ -18,6 +18,38 @@ def hello(request):
 
 regist_callback_me = 'http://localhost:8001/resource/regist'
 
+def method_register_activate(request):
+    print request.REQUEST
+    register_access_token = request_get(request.REQUEST, url_keys.register_access_token)
+    registrant_access_token = request_get(request.REQUEST, url_keys.registrant_access_token)
+    registrant_access_validate = request_get(request.REQUEST, url_keys.registrant_access_validate)
+    try:
+        registration = Registration.objects.get(register_access_token=register_access_token)
+    except ObjectDoesNotExist:
+        return error_response(3, (url_keys.register_access_token, register_access_token))
+    registration.registrant_access_token = registrant_access_token
+    registration.registrant_access_validate = registrant_access_validate
+    regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_activate)
+    registration.regist_status = regist_status_key
+    registration.save()
+    c = {
+        'registrant_access_token':{
+            'label': url_keys.registrant_access_token,
+            'value': registrant_access_token,
+            },
+        'register_access_token':{
+            'label': url_keys.registrant_access_token,
+            'value': register_access_token,
+            },
+        'regist_activate_action':{
+            'label': url_keys.regist_activate_action,
+            'activate': url_keys.regist_activate_action_activate,
+            },
+        }
+    context = RequestContext(request, c)
+    return render_to_response("regist_activate.html", context)
+    #return HttpResponse('hello')
+
 class regist_dealer_resource(regist_dealer):
     def regist_init(self): pass
     def registrant_request(self): 
@@ -177,6 +209,7 @@ class regist_dealer_resource(regist_dealer):
                     url_keys.regist_status: REGIST_STATUS.registrant_owner_redirect,
                     url_keys.regist_type: regist_type,
                     url_keys.regist_callback: regist_callback_me,
+                    url_keys.registrant_request_token: registration.registrant_request_token,
                     url_keys.register_access_token: registration.register_access_token,
                     url_keys.register_access_validate: registration.register_access_validate,
                     url_keys.register_request_token: registration.register_request_token,
@@ -207,6 +240,7 @@ class regist_dealer_resource(regist_dealer):
             url_keys.regist_status: REGIST_STATUS.registrant_confirm, # for mutual registraiton it is different, user need to decide here, TODO
             url_keys.regist_type: regist_type,
             url_keys.regist_callback: regist_callback_me,
+            url_keys.registrant_request_token: registration.registrant_request_token,
             url_keys.register_access_token: register_access_token,
             url_keys.register_access_validate: register_access_validate,
             url_keys.register_request_token: register_request_token,
@@ -250,7 +284,8 @@ class regist_dealer_resource(regist_dealer):
     def registrant_owner_redirect(self): pass
     def registrant_owner_grant(self): pass
     def registrant_confirm(self): pass
-    def register_activate(self): pass
+    def register_activate(self): 
+        return method_register_activate(self.request)
     def regist_finish(self): pass
     
 def regist(request):
