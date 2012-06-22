@@ -192,30 +192,9 @@ class regist_dealer_resource(regist_dealer):
                 'label': url_keys.register_request_action,
                 'request': url_keys.register_request_action_request,
                 },
-            'register_request_scope': {
-                'label': url_keys.register_request_scope,
-                'value': register_request_scope,
-                },
-            'register_request_token': {
-                'label': url_keys.register_request_token,
-                'value': register_request_token,
-                },
-            'register_access_token': {
-                'label': url_keys.register_access_token,
-                'value': register_access_token,
-                },
-            'register_access_validate': {
-                'label': url_keys.register_access_validate,
-                'value': register_access_validate,
-                },
-            'regist_status':{
-                'label': url_keys.regist_status,
-                'value': REGIST_STATUS.register_grant,
-                },
-            'regist_type':{ # need to add into template files
-                'label': url_keys.regist_type,
-                'value':regist_type,
-                },
+            
+            
+            
             }
         context = RequestContext(self.request, c)
         return render_to_response("regist_grant.html", context)'''
