@@ -11,7 +11,7 @@ from libauth.models import Registration
 from libauth.models import REGIST_STATUS, REGIST_TYPE, TOKEN_TYPE
 from libauth.models import find_key_by_value_regist_type, find_key_by_value_regist_status, find_key_by_value_regist_request_media
 from libauth.views import regist_steps, regist_dealer
-from libauth.views import method_regist_init, method_registrant_request
+from libauth.views import method_regist_init, method_registrant_request, method_register_owner_redirect, method_register_owner_grant
 
 def hello(request):
     return HttpResponse('hello, resource')
@@ -20,6 +20,7 @@ def hello(request):
 regist_callback_me = 'http://localhost:8001/resource/regist'
 
 def method_register_activate(request):
+    '''
     print request.REQUEST
     register_access_token = request_get(request.REQUEST, url_keys.register_access_token)
     registrant_access_token = request_get(request.REQUEST, url_keys.registrant_access_token)
@@ -48,8 +49,8 @@ def method_register_activate(request):
             },
         }
     context = RequestContext(request, c)
-    return render_to_response("regist_activate.html", context)
-    #return HttpResponse('hello')
+    return render_to_response("regist_activate.html", context)'''
+    return HttpResponse('hello')
 
 class regist_dealer_resource(regist_dealer):
     def regist_init(self): pass
@@ -58,6 +59,8 @@ class regist_dealer_resource(regist_dealer):
     def register_owner_redirect(self):
         return method_register_owner_redirect(self.request, regist_callback_me)
     def register_owner_grant(self): 
+        return method_register_owner_grant(self.request, regist_callback_me)
+        '''
         # requrie user to login first if not, otherwise, will display the previous page, use another params to see
         regist_type = request_get(self.request.REQUEST, url_keys.regist_type)
         register_redirect_token = request_get(self.request.REQUEST, url_keys.register_redirect_token)
@@ -104,8 +107,9 @@ class regist_dealer_resource(regist_dealer):
                 },
             }
         context = RequestContext(self.request, c)
-        return render_to_response("regist_owner_grant.html", context)
+        return render_to_response("regist_owner_grant.html", context)'''
     def register_grant(self): 
+        '''
         print self.request.REQUEST
         user = self.request.user
         register_redirect_token = request_get(self.request.REQUEST, url_keys.register_redirect_token)
@@ -213,7 +217,7 @@ class regist_dealer_resource(regist_dealer):
                 },
             }
         context = RequestContext(self.request, c)
-        return render_to_response("regist_grant.html", context)
+        return render_to_response("regist_grant.html", context)'''
     def registrant_owner_redirect(self): pass
     def registrant_owner_grant(self): pass
     def registrant_confirm(self): pass
@@ -229,3 +233,80 @@ def regist(request):
 
 
     
+
+
+
+
+
+
+'''
+register_redirect_action = request_get(self.request.REQUEST, url_keys.regist_redirect_action)
+        if register_redirect_action == url_keys.regist_redirect_action_redirect:
+            url = request_get(self.request.REQUEST, url_keys.regist_redirect_url)
+            return HttpResponseRedirect(url)
+        if register_redirect_action == url_keys.regist_redirect_action_login_redirect:
+            url = request_get(self.request.REQUEST, url_keys.regist_redirect_url)
+            user = self.request.user
+            if user.is_authenticated():
+                return HttpResponseRedirect(url)
+            params = {
+                "next":url
+                }
+            url_params = dwlib.urlencode(params)
+            return HttpResponseRedirect('/accounts/login?%s'%url_params)
+        registrant_callback = request_get(self.request.REQUEST, url_keys.regist_callback)
+        regist_type = request_get(self.request.REQUEST, url_keys.regist_type)
+        registrant_request_token = request_get(self.request.REQUEST, url_keys.registrant_request_token)
+        registrant_request_scope = request_get(self.request.REQUEST, url_keys.registrant_request_scope) # may check it is in scope or not
+        registrant_request_reminder = request_get(self.request.REQUEST, url_keys.registrant_request_reminder)
+        registrant_request_media = request_get(self.request.REQUEST, url_keys.registrant_request_media)
+        registrant_request_user_public = request_get(self.request.REQUEST, url_keys.registrant_request_user_public)
+        register_redirect_token = dwlib.token_create(registrant_callback, TOKEN_TYPE.redirect)
+        params = {
+            url_keys.regist_status: REGIST_STATUS.register_owner_grant,
+            url_keys.regist_type: regist_type,
+            url_keys.register_redirect_token:register_redirect_token,
+        }
+        url_params = dwlib.urlencode(params)
+        url = '%s?%s'%(regist_callback_me, url_params)
+        regist_type_key = find_key_by_value_regist_type(regist_type)
+        regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_owner_redirect)
+        registrant_request_media_key = find_key_by_value_regist_request_media(registrant_request_media)
+        obj, created = Registration.objects.get_or_create(
+            regist_type=regist_type_key, 
+            regist_status=regist_status_key, 
+            registrant_request_token=registrant_request_token, 
+            registrant_request_scope=registrant_request_scope, 
+            registrant_callback=registrant_callback, 
+            register_callback=regist_callback_me, 
+            registrant_request_reminder=registrant_request_reminder, 
+            registrant_request_user_public=registrant_request_user_public,
+            registrant_request_media=registrant_request_media_key,
+            register_redirect_token=register_redirect_token)
+        c = {
+            "register_redirect_token":{
+                'label': url_keys.register_redirect_token,
+                'value': register_redirect_token,
+                },
+            "regist_redirect_url": {
+                'label': url_keys.regist_redirect_url,
+                'value': url,
+                },
+            'regist_status':{
+                'label': url_keys.regist_status,
+                'value': REGIST_STATUS.register_owner_redirect,
+                },
+            'register_redirect_action':{
+                'label': url_keys.regist_redirect_action,
+                'login_redirect': url_keys.regist_redirect_action_login_redirect,
+                'redirect': url_keys.regist_redirect_action_redirect,
+                },
+            'regist_type':{ # need to add into template files
+                'label': url_keys.regist_type,
+                'catalog_resource': REGIST_TYPE.catalog_resource,
+                'client_catalog': REGIST_TYPE.client_catalog,
+                },
+            }
+        context = RequestContext(self.request, c)
+        return render_to_response("regist_owner_redirect.html", context)
+'''
