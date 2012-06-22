@@ -16,41 +16,7 @@ from libauth.views import method_regist_init, method_registrant_request, method_
 def hello(request):
     return HttpResponse('hello, resource')
 
-
 regist_callback_me = 'http://localhost:8001/resource/regist'
-
-def method_register_activate(request):
-    '''
-    print request.REQUEST
-    register_access_token = request_get(request.REQUEST, url_keys.register_access_token)
-    registrant_access_token = request_get(request.REQUEST, url_keys.registrant_access_token)
-    registrant_access_validate = request_get(request.REQUEST, url_keys.registrant_access_validate)
-    try:
-        registration = Registration.objects.get(register_access_token=register_access_token)
-    except ObjectDoesNotExist:
-        return error_response(3, (url_keys.register_access_token, register_access_token))
-    registration.registrant_access_token = registrant_access_token
-    registration.registrant_access_validate = registrant_access_validate
-    regist_status_key = find_key_by_value_regist_status(REGIST_STATUS.register_activate)
-    registration.regist_status = regist_status_key
-    registration.save()
-    c = {
-        'registrant_access_token':{
-            'label': url_keys.registrant_access_token,
-            'value': registrant_access_token,
-            },
-        'register_access_token':{
-            'label': url_keys.registrant_access_token,
-            'value': register_access_token,
-            },
-        'regist_activate_action':{
-            'label': url_keys.regist_activate_action,
-            'activate': url_keys.regist_activate_action_activate,
-            },
-        }
-    context = RequestContext(request, c)
-    return render_to_response("regist_activate.html", context)'''
-    return HttpResponse('hello')
 
 class regist_dealer_resource(regist_dealer):
     def regist_init(self): pass
