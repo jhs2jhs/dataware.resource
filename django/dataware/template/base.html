@@ -16,7 +16,7 @@
     Login as {{ user.username }} |
     <a href="{% url django.contrib.auth.views.logout %}?next=/">Logout</a>
     {% endif %} 
-    <div>
+    </div>
     {% block content %}{% endblock %}
   </body>
 </html>
