@@ -11,12 +11,12 @@
     <a href="{% url django.contrib.auth.views.login %}?next={{request.path}}">Login</a>
     -->
     <h1>Horizon Dataware Resource Server</h1>
-    <div>
     {% if user.is_authenticated %}
+    <div>
     Login as {{ user.username }} |
     <a href="{% url django.contrib.auth.views.logout %}?next=/">Logout</a>
-    {% endif %} 
     </div>
+    {% endif %} 
     {% block content %}{% endblock %}
   </body>
 </html>
