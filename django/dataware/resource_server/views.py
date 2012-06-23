@@ -11,7 +11,7 @@ from libauth.models import Registration
 from libauth.models import REGIST_STATUS, REGIST_TYPE, TOKEN_TYPE
 from libauth.models import find_key_by_value_regist_type, find_key_by_value_regist_status, find_key_by_value_regist_request_media
 from libauth.views import regist_steps, regist_dealer
-from libauth.views import method_regist_init, method_registrant_request, method_register_owner_redirect, method_register_owner_grant, method_register_grant, method_regist_finish
+#from libauth.views import method_regist_init, method_registrant_request, method_register_owner_redirect, method_register_owner_grant, method_register_grant, method_regist_finish
 
 def hello(request):
     return HttpResponse('hello, resource')
@@ -38,5 +38,5 @@ class regist_dealer_resource(regist_dealer):
     
 def regist(request):
     # if no correct status is matched
-    return regist_steps(regist_dealer_resource(request), request)
+    return regist_steps(request, regist_callback_me)
 
